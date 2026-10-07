@@ -2,40 +2,95 @@
   "manifest_version": 1,
   "id": "playwright-record",
   "name": "Playwright Recorder",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Record shared-browser Playwright flows as reviewable sessions with video, trace, screenshots, network and console logs, plus a self-contained report in the AW UI.",
   "tier": "inprocess",
   "requires_ui_refresh": true,
   "category": "Tools",
   "publisher": "TekFlox",
-  "resource_estimate": {"cpu": "medium", "memory": "medium", "disk": "medium"},
+  "resource_estimate": {
+    "cpu": "medium",
+    "memory": "medium",
+    "disk": "medium"
+  },
   "runtime": {
     "python": ">=3.11",
     "entrypoint": "playwright_record_app.plugin:PlaywrightRecordAppPlugin",
-    "pip_requires": ["playwright>=1.40"],
-    "standalone": {"module": "playwright_record_app", "default_port": 9414}
+    "pip_requires": [
+      "playwright>=1.40"
+    ],
+    "standalone": {
+      "module": "playwright_record_app",
+      "default_port": 9414
+    }
   },
-  "permissions": ["commands:install", "fs:workspace-data", "net:outbound", "routes:register"],
+  "permissions": [
+    "commands:install",
+    "fs:workspace-data",
+    "net:outbound",
+    "routes:register"
+  ],
   "contributes": {
-    "system_clis": [{"name": "ffmpeg", "installer": "scripts/install_ffmpeg.sh", "verify": "ffmpeg -version"}],
-    "routes": [{"prefix": "/api/apps/playwright-record"}],
-    "windows": [{
-      "id": "playwright-record.main",
-      "title": "Playwright Recorder",
-      "icon": "video",
-      "body": {"type": "declarative", "spec": "windows/main.json"}
-    }],
-    "skills": [{
-      "id": "aw-playwright-record",
-      "path": "skills/aw-playwright-record/SKILL.md",
-      "description": "Record shared Playwright browser flows through the Playwright Recorder MCP tools and retrieve their reports and forensic artifacts."
-    }],
-    "mcp": {"reload_on_save": true, "provides": ["recording_start", "recording_stop", "recording_snap", "recording_status", "recording_kill", "recording_gc"]}
+    "system_clis": [
+      {
+        "name": "ffmpeg",
+        "installer": "scripts/install_ffmpeg.sh",
+        "verify": "ffmpeg -version"
+      }
+    ],
+    "routes": [
+      {
+        "prefix": "/api/apps/playwright-record"
+      }
+    ],
+    "windows": [
+      {
+        "id": "playwright-record.main",
+        "title": "Playwright Recorder",
+        "icon": "video",
+        "body": {
+          "type": "declarative",
+          "spec": "windows/main.json"
+        }
+      }
+    ],
+    "skills": [
+      {
+        "id": "aw-playwright-record",
+        "path": "skills/aw-playwright-record/SKILL.md",
+        "description": "Record shared Playwright browser flows through the Playwright Recorder MCP tools and retrieve their reports and forensic artifacts."
+      }
+    ],
+    "mcp": {
+      "reload_on_save": true,
+      "provides": [
+        "recording_start",
+        "recording_stop",
+        "recording_snap",
+        "recording_status",
+        "recording_kill",
+        "recording_gc"
+      ]
+    }
   },
-  "dependencies": {"apps": [
-    {"id": "mcp-gateway", "required": true, "reason": "Discovers and proxies this app's lifecycle and retrieval MCP tools."},
-    {"id": "browser", "required": true, "reason": "Provides the shared Chromium CDP endpoint observed by the recorder."},
-    {"id": "presentations", "required": false, "reason": "Receives completed self-contained reports for display in the AW presentation UI."}
-  ]},
+  "dependencies": {
+    "apps": [
+      {
+        "id": "mcp-gateway",
+        "required": true,
+        "reason": "Discovers and proxies this app's lifecycle and retrieval MCP tools."
+      },
+      {
+        "id": "browser",
+        "required": true,
+        "reason": "Provides the shared Chromium CDP endpoint observed by the recorder."
+      },
+      {
+        "id": "presentations",
+        "required": false,
+        "reason": "Receives completed self-contained reports for display in the AW presentation UI."
+      }
+    ]
+  },
   "migrations": {}
 }
