@@ -156,6 +156,11 @@ def cmd_start(args):
         # Python's stdout with StringIO, which intentionally has no fileno().
         os.dup2(log.fileno(), 1)
         os.dup2(log.fileno(), 2)
+        # The parent MCP request captures Python stdout/stderr with StringIO.
+        # After fork, replace those objects as well as their process FDs so
+        # daemon diagnostics actually reach daemon.log.
+        sys.stdout = open(1, "w", buffering=1, closefd=False)
+        sys.stderr = open(2, "w", buffering=1, closefd=False)
         with open(os.devnull, "rb") as devnull:
             os.dup2(devnull.fileno(), 0)
         try:
@@ -623,7 +628,7 @@ async def daemon_main(bundle: Path, fps: int):
         (bundle / "meta.json").write_text(json.dumps(meta, indent=2))
 
     try:
-        from render_report import render_report
+        from .render_report import render_report
         render_report(bundle)
         print("[daemon] report.html written", flush=True)
     except Exception as e:
