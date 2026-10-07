@@ -57,6 +57,7 @@ ui/coverage/
 tmp/
 temp/
 *.log
+mcp.json
 
 # ui/dist IS committed: the release workflow runs tests only, never
 # `npm run build`, so a gitignored bundle means the installed app points at a

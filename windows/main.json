@@ -1,0 +1,11 @@
+{
+  "layout": "stack",
+  "regions": [{
+    "id": "main",
+    "widgets": [{
+      "type": "iframe",
+      "src": "/api/apps/playwright-record/",
+      "title": "Recordings"
+    }]
+  }]
+}

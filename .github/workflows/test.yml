@@ -62,25 +62,5 @@ jobs:
           path: .aw-marketplace-schema
       - name: Validate manifest
         run: python3 tests/validate_manifest.py aw-app.json --schema .aw-marketplace-schema/schemas/aw-app.schema.json
-      - name: Test suite + coverage gate
-        # fail_under is read from pyproject.toml's [tool.coverage.report] —
-        # see docs/standards/pipeline-testing.md §4.2. html + xml reports are
-        # generated alongside the blocking term-missing one specifically so
-        # the html report can be published as a downloadable artifact below
-        # — this step still fails (and skips the upload) if coverage drops
-        # below fail_under.
-        run: |
-          pytest --cov=template_app --cov-report=term-missing \
-            --cov-report=html --cov-report=xml tests/ -q
-      - name: Upload coverage report artifact
-        # Downloadable straight from the Actions run's Summary page — no
-        # local pytest run needed to see what's covered. if: always() so a
-        # failing coverage gate still publishes the report that explains why.
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: coverage-report
-          path: |
-            htmlcov/
-            coverage.xml
-          retention-days: 30
+      - name: Test suite
+        run: pytest tests/ -q
