@@ -15,6 +15,8 @@ The app contributes a Recorder window in the Apps grid and proper MCP tools: `re
 
 This is a Tier-1 app. It does not launch another browser. It attaches as a second, observing CDP client to the browser app at `http://aw-app-browser:9223`; the regular shared Playwright MCP remains the driving client. The only capabilities are registered routes, outbound network access, app-owned data, and the idempotent ffmpeg installer.
 
+The Browser app is intentionally not a manifest dependency: the recorder also supports any compatible shared CDP endpoint configured in Settings, and app dependencies are install-order requirements rather than runtime recommendations.
+
 ## Development
 
 ```bash

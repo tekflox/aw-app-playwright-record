@@ -81,11 +81,6 @@
         "reason": "Discovers and proxies this app's lifecycle and retrieval MCP tools."
       },
       {
-        "id": "browser",
-        "required": false,
-        "reason": "Provides the usual shared Chromium CDP endpoint; another compatible CDP browser can be configured instead."
-      },
-      {
         "id": "presentations",
         "required": false,
         "reason": "Receives completed self-contained reports for display in the AW presentation UI."
