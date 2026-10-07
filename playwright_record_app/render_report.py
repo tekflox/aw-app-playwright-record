@@ -3,8 +3,11 @@
 import argparse
 import base64
 import json
+import logging
 import sys
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 REPORT_TEMPLATE = """<!doctype html>
@@ -374,8 +377,8 @@ def read_jsonl(path: Path) -> list:
             continue
         try:
             out.append(json.loads(line))
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            logger.warning("ignoring invalid JSONL entry in %s: %s", path, exc)
     return out
 
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from fastapi.concurrency import run_in_threadpool
 
-from .. import service
+from .. import __version__, service
 
 TOOLS = [
     {"name": "recording_start", "description": "Start observing the shared Playwright Chromium browser over CDP.", "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "fps": {"type": "integer", "minimum": 1, "maximum": 30, "default": 10}, "force": {"type": "boolean", "default": False}, "pause_frame": {"type": "boolean", "default": True}}, "required": ["name"]}},
@@ -26,7 +26,7 @@ def _err(req_id, exc):
 async def handle(body: dict):
     req_id, method = body.get("id"), body.get("method")
     if method == "initialize":
-        return {"jsonrpc": "2.0", "id": req_id, "result": {"protocolVersion": "2025-03-26", "capabilities": {"tools": {}}, "serverInfo": {"name": "aw-playwright-record", "version": "0.1.0"}}}
+        return {"jsonrpc": "2.0", "id": req_id, "result": {"protocolVersion": "2025-03-26", "capabilities": {"tools": {}}, "serverInfo": {"name": "aw-playwright-record", "version": __version__}}}
     if method == "notifications/initialized":
         return None
     if method == "tools/list":

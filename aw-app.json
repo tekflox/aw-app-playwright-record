@@ -2,7 +2,7 @@
   "manifest_version": 1,
   "id": "playwright-record",
   "name": "Playwright Recorder",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Record shared-browser Playwright flows as reviewable sessions with video, trace, screenshots, network and console logs, plus a self-contained report in the AW UI.",
   "tier": "inprocess",
   "requires_ui_refresh": true,

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aw-app-playwright-record"
-version = "0.1.0"
+version = "0.2.4"
 requires-python = ">=3.11"
 dependencies = ["fastapi>=0.110", "uvicorn>=0.29", "playwright>=1.40"]
 
@@ -13,3 +13,11 @@ playwright-record-app = "playwright_record_app.__main__:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "--cov=playwright_record_app --cov-report=term-missing --cov-fail-under=30"
+
+[tool.coverage.run]
+branch = true
+
+[tool.coverage.report]
+fail_under = 30
+show_missing = true

@@ -26,6 +26,7 @@ import argparse
 import asyncio
 import base64
 import json
+import logging
 import os
 import shutil
 import signal
@@ -57,6 +58,8 @@ MAX_FRAME_GAP_S = 5.0
 MIN_FRAME_GAP_S = 0.05
 LAST_FRAME_GAP_S = 1.5
 
+logger = logging.getLogger(__name__)
+
 
 
 def utc_now_iso():
@@ -87,8 +90,8 @@ def is_alive(pid: int) -> bool:
                     return "Z" not in line.split(maxsplit=2)[1:2]
     except FileNotFoundError:
         return False
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.warning("could not inspect process state for pid=%s: %s", pid, exc)
     return True
 
 
@@ -104,8 +107,8 @@ def find_active_bundle() -> Path | None:
                 pid = int(pid_file.read_text().strip())
                 if is_alive(pid):
                     candidates.append(d)
-            except (ValueError, OSError):
-                pass
+            except (ValueError, OSError) as exc:
+                logger.warning("ignoring unreadable recorder pid file %s: %s", pid_file, exc)
     if len(candidates) == 0:
         return None
     if len(candidates) > 1:
@@ -283,15 +286,16 @@ def cmd_status(args):
             continue
         try:
             meta = json.loads(meta_path.read_text())
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            logger.warning("ignoring invalid recording metadata %s: %s", meta_path, exc)
             continue
         pid_file = d / "recorder.pid"
         alive = False
         if pid_file.exists():
             try:
                 alive = is_alive(int(pid_file.read_text().strip()))
-            except (ValueError, OSError):
-                pass
+            except (ValueError, OSError) as exc:
+                logger.warning("could not read recorder state from %s: %s", pid_file, exc)
         out.append({
             "name": meta.get("name", d.name),
             "status": "RUNNING" if alive else meta.get("status", "?"),
@@ -339,8 +343,8 @@ def cmd_gc(args):
             try:
                 if is_alive(int(pid_file.read_text().strip())):
                     continue
-            except (ValueError, OSError):
-                pass
+            except (ValueError, OSError) as exc:
+                logger.warning("could not read recorder state from %s: %s", pid_file, exc)
         if d.stat().st_mtime < cutoff:
             shutil.rmtree(d)
             removed.append(d.name)
@@ -368,8 +372,8 @@ def _awserv_request(method: str, path: str, body: dict | None = None, timeout: f
         api_key = os.environ.get("AW_WORKSPACE_API_KEY", "").strip()
         if api_key:
             headers["x-api-key"] = api_key
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.warning("could not read AW_WORKSPACE_API_KEY for %s %s: %s", method, url, exc)
     req = urllib.request.Request(url, data=data, headers=headers, method=method)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
@@ -391,7 +395,8 @@ def push_presentation_for_bundle(bundle: Path) -> dict | None:
         return None
     try:
         meta = json.loads((bundle / "meta.json").read_text())
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (FileNotFoundError, json.JSONDecodeError) as exc:
+        logger.warning("using bundle name because metadata is unavailable for %s: %s", bundle, exc)
         meta = {"name": bundle.name}
 
     name = meta.get("name", bundle.name)
@@ -462,8 +467,8 @@ def cmd_gc_presentations(args):
                     if is_alive(int(pid_file.read_text().strip())):
                         kept.append({"id": cid, "reason": "daemon alive"})
                         continue
-                except (ValueError, OSError):
-                    pass
+                except (ValueError, OSError) as exc:
+                    logger.warning("could not read recorder state from %s: %s", pid_file, exc)
 
         if args.orphans_only and bundle_exists:
             kept.append({"id": cid, "reason": "bundle present"})
@@ -492,8 +497,8 @@ class DaemonState:
         self.network_count = 0
         self.console_count = 0
         self.error_count = 0
-        self.last_event_ts = time.monotonic()
         self.start_ts = time.monotonic()
+        self.last_event_ts = self.start_ts
         self.should_stop = False
         self.snap_requested = False
         self.cdp_session = None
@@ -636,8 +641,8 @@ async def daemon_main(bundle: Path, fps: int):
 
     try:
         await browser.close()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("browser close failed while finalizing %s: %s", bundle, exc)
     await pw.stop()
 
     (bundle / "DONE").touch()
@@ -679,7 +684,8 @@ async def attach_page_listeners(state: DaemonState, page):
     def on_request_finished(req):
         try:
             response = req.response()
-        except Exception:
+        except Exception as exc:
+            logger.warning("request response lookup failed for %s: %s", req.url, exc)
             response = None
         state.network_count += 1
         state.last_event_ts = time.monotonic()
@@ -697,7 +703,8 @@ async def attach_page_listeners(state: DaemonState, page):
         state.last_event_ts = time.monotonic()
         try:
             timing = resp.request.timing or {}
-        except Exception:
+        except Exception as exc:
+            logger.warning("response timing lookup failed for %s: %s", resp.url, exc)
             timing = {}
         append_jsonl(bundle / "network.jsonl", {
             "ts": utc_now_iso(),
@@ -852,8 +859,8 @@ def _render_pause_frame(prev_frame: Path, out_path: Path, paused_seconds: float)
             try:
                 font = ImageFont.truetype(path, size)
                 break
-            except (OSError, IOError):
-                pass
+            except (OSError, IOError) as exc:
+                logger.warning("could not load pause-frame font %s: %s", path, exc)
     if font is None:
         font = ImageFont.load_default()
 
@@ -895,8 +902,8 @@ def _prepare_concat_list(bundle: Path, fps: int):
             try:
                 obj = json.loads(line)
                 ts_map[obj["frame"]] = float(obj["ts_mono"])
-            except (json.JSONDecodeError, KeyError, ValueError):
-                pass
+            except (json.JSONDecodeError, KeyError, ValueError) as exc:
+                logger.warning("ignoring invalid frame timing in %s: %s", fjsonl, exc)
     if not ts_map:
         ts_map = {i + 1: i * (1.0 / fps) for i in range(len(frames))}
 
@@ -907,8 +914,8 @@ def _prepare_concat_list(bundle: Path, fps: int):
             pause_frame_enabled = bool(
                 json.loads(meta_path.read_text()).get("pause_frame_enabled", True)
             )
-        except json.JSONDecodeError:
-            pass
+        except json.JSONDecodeError as exc:
+            logger.warning("using default pause-frame setting; invalid metadata %s: %s", meta_path, exc)
 
     pause_dir = bundle / "pause_frames"
     pause_dir.mkdir(exist_ok=True)

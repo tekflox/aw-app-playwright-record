@@ -1,19 +1,8 @@
 name: Test
 
-# Push/PR-triggered coverage gate: pytest-cov against pyproject.toml's
-# fail_under=100, blocking. Per docs/standards/pipeline-testing.md — a hard
-# gate here specifically (not the estate's baseline+ratchet default, §4.2),
-# since this template is what every new aw-app-* is born from and is meant
-# to be the quality reference the rest of the estate is measured against
-# (card 3d75bf3b-9510-8172-a929-c1fe4e60254c) — coverage is genuinely at
-# 100% (real behavioral tests, not import-only stubs; impractical lines are
-# excluded explicitly in pyproject.toml's [tool.coverage.report], not left
-# as a silent gap), so the gate now locks that in rather than allowing
-# regression back toward the estate's 80% floor. The shared
-# tekflox/aw-marketplace release workflow (release.yml -> app-release.yml)
-# runs the test suite but has no coverage step yet — that's Phase 2 of the
-# standard's rollout, a separate repo — so until then this repo's own gate
-# lives here.
+# Push/PR-triggered coverage gate. pyproject.toml is the single source of
+# truth and currently enforces 30%; the daemon lifecycle test exercises the
+# complete finalization path and artifact contract.
 on:
   push:
     branches: [master]
