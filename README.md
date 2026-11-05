@@ -32,3 +32,5 @@ aw-workspace-cli marketplace install playwright-record --update
 aw-workspace-cli restart mcp-gateway
 aw-workspace-cli doctor
 ```
+
+<!-- fleet migration batch 1: follow-up no-op to prove the review/merge loop end-to-end -->
