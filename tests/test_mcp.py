@@ -8,7 +8,7 @@ from playwright_record_app.mcp.http_handler import handle
 async def test_initialize():
     result = await handle({"jsonrpc": "2.0", "id": 7, "method": "initialize"})
     assert result["result"]["serverInfo"]["name"] == "aw-playwright-record"
-    assert result["result"]["serverInfo"]["version"] == "0.3.0"
+    assert result["result"]["serverInfo"]["version"] == "0.4.0"
 
 
 @pytest.mark.asyncio
